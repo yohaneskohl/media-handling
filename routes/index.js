@@ -1,11 +1,19 @@
 var express = require("express");
 var router = express.Router();
-const mime = require('mime-types');
-const { image, video, document, audio } = require("../libs/multer");
+const {
+  imageStorage,
+  videoStorage,
+  documentStorage,
+  image,
+  document,
+  video,
+} = require("../libs/multer");
 
-router.post("/upload/image", image.single("image"), (req, res) => {
-  let imageUrl = `${req.protocol}://${req.get("host")}/images/${req.file.filename}`;
-  res.render("uploadedImages", { image_url: imageUrl });
+router.post("/upload/image", imageStorage.single("image"), (req, res) => {
+  let imageUrl = `${req.protocol}://${req.get("host")}/images/${
+    req.file.filename
+  }`;
+  res.render("uploadedImage", { image_url: imageUrl });
 
   //   jika mau tampilan json
 
@@ -15,54 +23,66 @@ router.post("/upload/image", image.single("image"), (req, res) => {
 });
 
 // upload multiple images
-router.post("/upload/images", image.array("image"), (req, res) => {
+router.post("/upload/images", imageStorage.array("image"), (req, res) => {
   let imagesUrl = req.files.map((file) => {
-    return `${req.protocol}://${req.get("host")}/images/${file.filename}`});
-    res.json({ images_url: imagesUrl });
+    return `${req.protocol}://${req.get("host")}/images/${file.filename}`;
+  });
+  res.json({ images_url: imagesUrl });
 });
 
 // single video (mp4,mpeg)
-router.post("/upload/video", video.single("video"), (req, res) => {
-  let videoUrl = `${req.protocol}://${req.get("host")}/videos/${req.file.filename}`;
-  res.render("uploadedVideos", { video_url: videoUrl });
+router.post("/upload/video", videoStorage.single("video"), (req, res) => {
+  let videoUrl = `${req.protocol}://${req.get("host")}/videos/${
+    req.file.filename
+  }`;
+  res.render("uploadedVideo", { video_url: videoUrl });
 });
 
-// Upload multiple videos
-router.post("/upload/videos", video.array("video"), (req, res) => {
-    let videosUrl = req.files.map((file) => {
-      return `${req.protocol}://${req.get("host")}/videos/${file.filename}`;
-    });
-    res.json({ videos_url: videosUrl });
+// multiple video
+router.post("/upload/videos", videoStorage.array("video"), (req, res) => {
+  let videosUrl = req.files.map((file) => {
+    return `${req.protocol}://${req.get("host")}/videos/${file.filename}`;
   });
-  
+  res.json({ videos_url: videosUrl });
+});
 
-// Upload single document (PDF, DOC, DOCX)
-router.post("/upload/document", document.single("document"), (req, res) => {
-    let documentUrl = `${req.protocol}://${req.get("host")}/documents/${req.file.filename}`;
-    res.render("uploadedDocuments", { document_url: documentUrl });
-  });
-  
-  // Upload multiple documents
-  router.post("/upload/documents", document.array("document"), (req, res) => {
-    let documentsUrl = req.files.map((file) => {
-      return `${req.protocol}://${req.get("host")}/documents/${file.filename}`;
-    });
+// single file
+router.post(
+  "/upload/document",
+  documentStorage.single("document"),
+  (req, res) => {
+    let documentUrl = `${req.protocol}://${req.get("host")}/documents/${
+      req.file.filename
+    }`;
+    res.render("uploadedDocument", { document_url: documentUrl });
+  }
+);
+
+// multiple file
+router.post(
+  "/upload/documents",
+  documentStorage.array("document"),
+  (req, res) => {
+    let documentsUrl = req.files.map(
+      (file) =>
+        `${req.protocol}://${req.get("host")}/documents/${file.filename}`
+    );
     res.json({ documents_url: documentsUrl });
-  });
-  
-// upload audio
-router.post("/upload/audio", audio.single("audio"), (req, res) => {
-  let audioUrl = `${req.protocol}://${req.get("host")}/audios/${req.file.filename}`;
-  let audioMimeType = mime.lookup(req.file.path);
-  res.render("uploadedAudios", { audio_url: audioUrl, audio_mime_type: audioMimeType });
-});
+  }
+);
 
-// Upload multiple audio
-router.post("/upload/audios", audio.array("audio"), (req, res) => {
-  let audiosUrl = req.files.map((file) => {
-    return `${req.protocol}://${req.get("host")}/audios/${file.filename}`;
-  });
-  res.json({ audios_url: audiosUrl });
-});
+const {
+  imageKitUpload,
+  generateQR,
+} = require("../controllers/media.controllers");
+router.post("/imagekit/upload/image", image.single("file"), imageKitUpload);
+router.post(
+  "/imagekit/upload/document",
+  document.single("file"),
+  imageKitUpload
+);
+router.post("/imagekit/upload/video", video.single("file"), imageKitUpload);
+
+router.post("/qr/generate", generateQR);
 
 module.exports = router;
